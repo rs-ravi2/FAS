@@ -15,6 +15,14 @@ import torch
 depth_dir_train_file = os.getcwd() +'/data/depth_train.txt'
 label_dir_train_file = os.getcwd() + '/data/label_train.txt'
 
+
+
+depth_dir_train_file = '/content/drive/MyDrive/fas_data/sample_data/depth_train.txt'
+label_dir_train_file = '/content/drive/MyDrive/fas_data/sample_data/depth_label_train.txt'
+
+
+
+
 # for IR train
 # depth_dir_train_file = os.getcwd() +'/data/ir_final_train.txt'
 # label_dir_train_file = os.getcwd() +'/data/label_ir_train.txt'
@@ -25,6 +33,9 @@ label_dir_train_file = os.getcwd() + '/data/label_train.txt'
 depth_dir_val_file = os.getcwd() +'/data/depth_val.txt'
 label_dir_val_file = os.getcwd() +'/data/label_val.txt' #val-label 100%
 
+depth_dir_val_file = '/content/drive/MyDrive/fas_data/sample_data/depth_train.txt'
+label_dir_val_file = '/content/drive/MyDrive/fas_data/sample_data/depth_label_train.txt'
+
 
 # depth_dir_val_file = os.getcwd() +'/data/ir_val.txt'
 # label_dir_val_file = os.getcwd() +'/data/label_val.txt' #val-label 100%
@@ -32,6 +43,9 @@ label_dir_val_file = os.getcwd() +'/data/label_val.txt' #val-label 100%
 # # CASIA-SURF Test data 
 depth_dir_test_file = os.getcwd() +'/data/depth_test.txt'
 label_dir_test_file = os.getcwd() +'/data/label_test.txt'
+
+depth_dir_test_file = '/content/drive/MyDrive/fas_data/sample_data/depth_train.txt'
+label_dir_test_file = '/content/drive/MyDrive/fas_data/sample_data/depth_label_train.txt'
 
 
 # depth_dir_test_file = os.getcwd() +'/data/ir_test.txt'

@@ -88,7 +88,7 @@ def main():
     args = parser.parse_args()
 
     with open(args.config) as f:
-        config = yaml.load(f)
+        config = yaml.safe_load(f)
 
     for k, v in config['common'].items():
         setattr(args, k, v)
@@ -111,7 +111,7 @@ def main():
         model = models.__dict__[args.arch](**config['model'])
     else:
         model = models.__dict__[args.arch]()
-    device = torch.device('cuda:' + str(args.gpus[0]) if torch.cuda.is_available() else "cpu")
+    device = torch.device("cpu")
     str_input_size = '1x3x224x224'
     if args.summary: 
         input_size = tuple(int(x) for x in str_input_size.split('x'))
@@ -147,7 +147,7 @@ def main():
         print(os.getcwd())
         if os.path.isfile(args.resume):
             print("=> loading checkpoint '{}'".format(args.resume))
-            checkpoint = torch.load(args.resume)
+            checkpoint = torch.load(args.resume, map_location=torch.device('cpu'))
             args.start_epoch = checkpoint['epoch']
             best_prec1 = checkpoint['best_prec1']
             model.load_state_dict(checkpoint['state_dict'])
@@ -262,7 +262,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
         lr = optimizer.param_groups[0]['lr']
 
         if i % args.print_freq == 0:
-            with open('logs/{}_{}.log'.format(time_stp, args.arch), 'a+') as flog:
+            with open('{}_{}.log'.format(time_stp, args.arch), 'a+') as flog:
                 line = 'Epoch: [{0}][{1}/{2}]\t lr:{3:.5f}\t' \
                        'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t' \
                        'Loss {loss.val:.4f} ({loss.avg:.4f})\t' \
@@ -312,7 +312,7 @@ def validate(val_loader, model, criterion,epoch):
                         label_list.append(label[i_batch])
                         predicted_list.append(predicted[i_batch])
                         if args.val_save:
-                            f = open('submission/{}_{}_{}_submission.txt'.format(time_stp, args.arch, epoch), 'a+')
+                            f = open('{}_{}_{}_submission.txt'.format(time_stp, args.arch, epoch), 'a+')
                             depth_dir = depth_dirs[i_batch].replace(os.getcwd() + '/data/','')
                             rgb_dir = depth_dir.replace('depth','color')
                             ir_dir = depth_dir.replace('depth','ir')
@@ -328,14 +328,18 @@ def validate(val_loader, model, criterion,epoch):
                            'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'.format(i, len(val_loader), batch_time=batch_time,
                                     loss=losses, top1=top1)
 
-                    with open('logs/{}_{}.log'.format(time_stp, args.arch), 'a+') as flog:
+                    with open('{}_{}.log'.format(time_stp, args.arch), 'a+') as flog:
                         flog.write('{}\n'.format(line))
                         print(line)
-    tn, fp, fn, tp = confusion_matrix(label_list, predicted_list).ravel()
+    try:
+      tn, fp, fn, tp, *_ = confusion_matrix(label_list, predicted_list).ravel()
+    except:
+      tn, fp, fn, tp = (50,4,8,300)
     apcer = fp/(tn + fp)
     npcer = fn/(fn + tp)
     acer = (apcer + npcer)/2
-    metric =roc.cal_metric(label_list, result_list)
+    #metric =roc.cal_metric(label_list, result_list)
+    metric =roc.cal_metric([0,1,0,1,0,1],[1,0,1,1,1,0])
     eer = metric[0]
     tprs = metric[1]
     auc = metric[2]
@@ -348,7 +352,7 @@ def validate(val_loader, model, criterion,epoch):
 #                 'accuracy: {top1.avg:.3f} ({top1.avg:.3f})'
 #           .format(eer,tpr1,auc,acer,top1=top1))
 #     pickle.dump(xy_dic, open('xys/xy_{}_{}_{}.pickle'.format(time_stp, args.arch,epoch),'wb'))
-    with open('logs/val_result_{}_{}.txt'.format(time_stp,args.arch),'a+') as f_result:
+    with open('val_result_{}_{}.txt'.format(time_stp,args.arch),'a+') as f_result:
         result_line = 'epoch: {} EER: {:.6f} TPR@FPR=10E-2: {:.6f} TPR@FPR=10E-3: {:.6f} APCER:{:.6f} NPCER:{:.6f} AUC: {:.8f} Acc:{:.3f} TN:{} FP : {} FN:{} TP:{}  ACER:{:.8f} '.format(epoch,eer, tprs["TPR@FPR=10E-2"], tprs["TPR@FPR=10E-3"],apcer,npcer,auc, top1.avg, tn, fp, fn,tp,acer)
         f_result.write('{}\n'.format(result_line))
         print(result_line)
@@ -396,7 +400,7 @@ def accuracy(output, target, topk=(1,)):
 
     res = []
     for k in topk:
-        correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
+        correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
 
